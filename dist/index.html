@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#146b55">
+  <meta name="description" content="ห้องติว INT151 รวมสรุปจากสไลด์และคาบเรียน ข้อเท็จจริงที่ชอบสับสน และแบบฝึก Multiple Correct พร้อมเฉลยทีละตัวเลือก">
+  <title>INT151 · ห้องติวพร้อมสอบ</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./lessons.js" defer></script>
+  <script src="./bank.js" defer></script>
+  <script src="./quiz-core.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">ข้ามไปเนื้อหา</a>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="เมนูห้องติว"></aside>
+    <button class="nav-backdrop" type="button" aria-label="ปิดเมนู"></button>
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-left"><button class="icon-button mobile-menu" type="button" aria-label="เปิดเมนู" aria-controls="sidebar" aria-expanded="false"></button><div class="breadcrumb" id="breadcrumb">พื้นที่เรียนของฉัน <span>/</span> ภาพรวม</div></div>
+        <div class="topbar-actions">
+          <button class="search-trigger" type="button" data-action="search"><span class="search-symbol" aria-hidden="true">⌕</span><span>ค้นหาเรื่องที่อยากทวน</span><kbd>Ctrl K</kbd></button>
+          <button class="icon-button" type="button" data-action="font" aria-label="ปรับขนาดตัวอักษร">ก<span class="font-small">ก</span></button>
+          <button class="icon-button" type="button" data-action="theme" aria-label="สลับโหมดสว่างและมืด" id="theme-toggle"></button>
+          <span class="user-avatar" aria-label="พื้นที่ส่วนตัวของฉัน">S</span>
+        </div>
+      </header>
+      <main id="main" tabindex="-1"><div class="page"><p>กำลังเตรียมห้องติว…</p></div></main>
+      <noscript><p class="panel">เปิด JavaScript เพื่ออ่านบทเรียนและทำแบบฝึกหัดในห้องติวนี้</p></noscript>
+      <footer class="app-footer">INT151 · เตรียม Exam 02 <span>เข้าใจ → ลองทำ → ทบทวนจุดพลาด</span></footer>
+    </div>
+  </div>
+  <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title">
+    <div class="dialog-head"><h2 id="search-title">อยากทวนเรื่องอะไร?</h2><button class="icon-button" type="button" data-action="close-search" aria-label="ปิดการค้นหา">×</button></div>
+    <search><label class="sr-only" for="global-search">ค้นหาบทเรียนและข้อเท็จจริง</label><input class="search-input" id="global-search" type="search" placeholder="เช่น target, Cookie, null, submit…" autocapitalize="off" spellcheck="false"></search>
+    <div id="search-results" class="search-results" aria-live="polite"></div>
+    <p class="search-help">ค้นหาได้ทั้งภาษาไทยและอังกฤษ · กด Esc เพื่อปิด</p>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

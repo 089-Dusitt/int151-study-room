@@ -1,0 +1,9 @@
+{
+  "name": "int151-study-room",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "INT151 Thai study room with lessons, fact cards and exact-set multiple-correct practice",
+  "scripts": { "check": "node scripts/check-site.mjs" },
+  "engines": { "node": ">=22" }
+}
