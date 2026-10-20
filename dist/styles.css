@@ -913,3 +913,34 @@
   .article { font-size: 10pt; }
   .lesson-pagination { display: none; }
 }
+
+/* Classroom facts: subjects, subtopics and a visible label on every card. */
+.fact-filter-count { margin-inline-start: 4px; font-size: .72em; opacity: .8; }
+.fact-subtopic-filter { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px 16px; padding: 18px 20px; margin-block-end: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.fact-subtopic-filter label { font-size: .85rem; font-weight: 600; }
+.fact-subtopic-filter .select { min-inline-size: 0; inline-size: 100%; }
+.fact-subtopic-filter p { grid-column: 2; margin: 0; color: var(--muted-strong); font-size: .76rem; line-height: 1.7; }
+.fact-topic-section + .fact-topic-section { margin-block-start: 48px; }
+.fact-topic-heading { display: flex; align-items: center; gap: 14px; padding-block-end: 18px; margin-block-end: 24px; border-block-end: 2px solid var(--line); }
+.fact-topic-heading .topic-icon { margin: 0; flex: 0 0 44px; }
+.fact-topic-heading h2 { margin: 0; font-size: 1.4rem; line-height: 1.5; }
+.fact-topic-heading p { margin: 4px 0 0; color: var(--muted-strong); font-size: .82rem; }
+.fact-subtopic-section + .fact-subtopic-section { margin-block-start: 30px; }
+.fact-subtopic-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-block-end: 14px; }
+.fact-subtopic-heading h3 { margin: 0; font-size: 1rem; line-height: 1.7; }
+.fact-subtopic-heading > span { flex-shrink: 0; color: var(--muted-strong); font-size: .78rem; }
+.facts-page .fact-head { align-items: flex-start; }
+.fact-labels { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 9px; min-inline-size: 0; }
+.fact-subtopic-label { color: var(--muted-strong); font-size: .73rem; line-height: 1.7; overflow-wrap: anywhere; }
+.facts-page .star-button { flex-shrink: 0; }
+.fact-subtopic-section .fact-card:only-child { grid-column: 1 / -1; }
+@media (max-width: 600px) {
+  .fact-subtopic-filter { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+  .fact-subtopic-filter p { grid-column: 1; }
+  .fact-topic-heading h2 { font-size: 1.2rem; }
+  .fact-subtopic-heading h3 { font-size: .94rem; }
+}
+@media print {
+  .fact-subtopic-filter { display: none; }
+  .fact-topic-heading, .fact-subtopic-heading { break-after: avoid; }
+}

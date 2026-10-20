@@ -9,6 +9,14 @@ assert(bank.facts.length >= 55, 'Fact coverage required');
 assert(bank.questions.length >= 30, 'Full exam pool required');
 assert.equal(bank.factsBasis, 'classroom');
 assert(bank.facts.every(f => f.source?.startsWith('คาบ') && f.truth && f.why), 'Each fact must cite the classroom session');
+const groupedIds = bank.factGroups.flatMap(group => group.factIds);
+assert.equal(new Set(bank.factGroups.map(group => group.id)).size, bank.factGroups.length, 'Subtopic IDs must be unique');
+assert.equal(groupedIds.length, bank.facts.length, 'Every fact must be categorized exactly once');
+assert.equal(new Set(groupedIds).size, bank.facts.length, 'Facts cannot belong to multiple subtopics');
+for (const fact of bank.facts) {
+  const group = bank.factGroups.find(item => item.id === fact.subtopic);
+  assert(group && group.topic === fact.topic && group.factIds.includes(fact.id), fact.id + ' needs a matching subject and subtopic');
+}
 assert.equal(bank.labs.length, 6);
 for (const [name, list] of Object.entries({ lessons, facts: bank.facts, questions: bank.questions, labs: bank.labs })) {
   assert.equal(new Set(list.map(item => item.id)).size, list.length, `${name} IDs must be unique`);

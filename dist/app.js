@@ -41,7 +41,10 @@
   for (const key of ['read', 'known', 'starred', 'labDone']) if (!state[key] || typeof state[key] !== 'object' || Array.isArray(state[key])) state[key] = {};
   for (const key of ['wrong', 'attempts']) if (!Array.isArray(state[key])) state[key] = [];
   let route = { view: 'dashboard', id: '' };
-  let factsTopic = 'all', factsMode = 'all', factsSearch = '';
+  let factsTopic = 'all', factsSubtopic = 'all', factsMode = 'all', factsSearch = '';
+  const factTopicOrder = ['dom', 'events', 'storage', 'javascript'];
+  const factGroups = bank.factGroups || [];
+  const factGroupById = new Map(factGroups.map(group => [group.id, group]));
   let quiz = null, quizTimer = null, toastTimer = null;
   let activeLesson = null;
   const main = document.querySelector('#main');
@@ -84,14 +87,36 @@
     return `<div class="page reader-page">${header('อ่านบทเรียน', 'LEARN THE CONCEPTS', 'อ่านให้เข้าใจทีละเรื่อง แล้วใช้บัตรจำและข้อสอบเช็กตัวเอง')}<div class="reader-layout"><nav class="lesson-nav" aria-label="สารบัญบทเรียน">${Object.entries(topics).map(([t, meta]) => { const group = lessons.filter(l => l.topic === t); return group.length ? `<div class="lesson-group"><div class="sidebar-label">${meta.name}</div>${group.map(l => `<a class="lesson-link ${l.id === lesson.id ? 'active' : ''}" href="#reader/${l.id}" ${l.id === lesson.id ? 'aria-current="page"' : ''}><span class="lesson-status ${state.read[l.id] ? 'done' : ''}">${state.read[l.id] ? '✓' : ''}</span><span>${esc(l.title)}</span></a>`).join('')}</div>` : ''; }).join('')}</nav><article class="lesson-card"><div class="article-meta">${topicPill(lesson.topic)}<span>${icon('clock')} ประมาณ ${lesson.minutes || 8} นาที</span><span>${index + 1} / ${lessons.length}</span></div><h2 class="article-title">${esc(lesson.title)}</h2><p class="article-intro">${esc(lesson.description)}</p>${lesson.keyPoints?.length ? `<aside class="key-points"><strong>อ่านบทนี้แล้วควรตอบได้</strong><ul>${lesson.keyPoints.map(p => `<li>${inline(p)}</li>`).join('')}</ul></aside>` : ''}<div class="article">${lesson.html}</div><div class="article-source">ต้นทาง: ${esc(lesson.source || 'สรุปสไลด์และ transcript INT151')}</div><div class="reader-actions"><button class="btn ${state.read[lesson.id] ? 'secondary' : 'primary'}" type="button" data-action="mark-read" data-id="${lesson.id}">${icon('check')} ${state.read[lesson.id] ? 'อ่านแล้ว · ยกเลิกเครื่องหมาย' : 'อ่านเข้าใจแล้ว ทำเครื่องหมาย'}</button><a class="btn secondary" href="#facts/${lesson.topic}">ทวนข้อเท็จจริง</a></div><nav class="lesson-pagination" aria-label="เปลี่ยนบท">${prev ? `<a href="#reader/${prev.id}"><small>← บทก่อนหน้า</small><strong>${esc(prev.title)}</strong></a>` : '<span></span>'}${next ? `<a href="#reader/${next.id}"><small>บทถัดไป →</small><strong>${esc(next.title)}</strong></a>` : '<a href="#quiz"><small>อ่านครบแล้ว</small><strong>ลองทำแบบทดสอบ →</strong></a>'}</nav></article></div></div>`;
   }
   function factsPage() {
-    return `<div class="page">${header('ข้อเท็จจริงจากคาบเรียน', 'FROM YOUR CLASSROOM', 'เรียบเรียงตามที่อาจารย์สอนใน transcript G1/G2 พร้อมตัวอย่างในห้องและคาบอ้างอิงใต้ทุกข้อ')}<div class="filter-bar"><div class="filter-tabs" role="group" aria-label="เลือกหัวข้อ">${[['all', 'ทุกหัวข้อ'], ...Object.entries(topics).filter(([t]) => t !== 'overview').map(([t, m]) => [t, m.short])].map(([t, title]) => `<button class="filter-button ${factsTopic === t ? 'active' : ''}" type="button" data-action="fact-topic" data-topic="${t}" aria-pressed="${factsTopic === t}">${title}</button>`).join('')}</div><div class="facts-controls"><label class="sr-only" for="fact-search">ค้นหาข้อเท็จจริง</label><input class="input" id="fact-search" type="search" placeholder="ค้นหา เช่น submit, null…" value="${esc(factsSearch)}"><label class="sr-only" for="fact-mode">สถานะบัตร</label><select class="select" id="fact-mode"><option value="all">ทุกบัตร</option value="unknown" ${factsMode === 'unknown' ? 'selected' : ''}>ยังจำไม่ได้</option><option value="starred" ${factsMode === 'starred' ? 'selected' : ''}>ติดดาวไว้</option><option value="known" ${factsMode === 'known' ? 'selected' : ''}>จำได้แล้ว</option></select></div></div><div id="fact-results"></div></div>`;
+    const categoryOptions = factTopicOrder.filter(t => factsTopic === 'all' || factsTopic === t).map(t => `<optgroup label="${esc(topics[t].name)}">${factGroups.filter(group => group.topic === t).map(group => `<option value="${group.id}" ${factsSubtopic === group.id ? 'selected' : ''}>${esc(group.title)} (${group.factIds.length} ข้อ)</option>`).join('')}</optgroup>`).join('');
+    return `<div class="page facts-page">${header('ข้อเท็จจริงจากคาบเรียน', 'FROM YOUR CLASSROOM', 'แบ่งตามหมวดและหัวข้อย่อยจากคาบ G1/G2 อ่านข้อเท็จจริงได้ทันที พร้อมตัวอย่างและคาบอ้างอิงใต้ทุกข้อ')}
+      <div class="filter-bar"><div class="filter-tabs" role="group" aria-label="เลือกหมวดหลัก">${[['all', 'ทุกหมวด'], ...factTopicOrder.map(t => [t, topics[t].short])].map(([t, title]) => `<button class="filter-button ${factsTopic === t ? 'active' : ''}" type="button" data-action="fact-topic" data-topic="${t}" aria-pressed="${factsTopic === t}">${title} <span class="fact-filter-count">${bank.facts.filter(f => t === 'all' || f.topic === t).length}</span></button>`).join('')}</div>
+      <div class="facts-controls"><label class="sr-only" for="fact-search">ค้นหาข้อเท็จจริงหรือหัวข้อ</label><input class="input" id="fact-search" type="search" placeholder="ค้นหา เช่น submit, Cookie…" value="${esc(factsSearch)}"><label class="sr-only" for="fact-mode">สถานะบัตร</label><select class="select" id="fact-mode"><option value="all">ทุกบัตร</option><option value="unknown" ${factsMode === 'unknown' ? 'selected' : ''}>ยังจำไม่ได้</option><option value="starred" ${factsMode === 'starred' ? 'selected' : ''}>ติดดาวไว้</option><option value="known" ${factsMode === 'known' ? 'selected' : ''}>จำได้แล้ว</option></select></div></div>
+      <div class="fact-subtopic-filter"><label for="fact-subtopic">เลือกหัวข้อย่อย</label><select class="select" id="fact-subtopic"><option value="all">ทุกหัวข้อย่อย${factsTopic === 'all' ? '' : `ในหมวด ${topics[factsTopic].short}`}</option>${categoryOptions}</select><p>แต่ละกลุ่มมีชื่อเรื่องกำกับ และทุกข้อมีป้ายบอกหมวดที่อ่านอยู่</p></div>
+      <div id="fact-results"></div></div>`;
+  }
+  function factCard(f, group, number) {
+    return `<article class="fact-card ${state.known[f.id] ? 'is-known' : ''}" id="fact-${f.id}" data-topic="${f.topic}" data-subtopic="${f.subtopic}">
+      <div class="fact-head"><div class="fact-labels">${topicPill(f.topic)}<span class="fact-subtopic-label">${esc(group.title)}</span>${f.emphasis ? '<span class="pill amber">อาจารย์ย้ำ</span>' : ''}</div><button class="icon-button star-button ${state.starred[f.id] ? 'starred' : ''}" type="button" data-action="star-fact" data-id="${f.id}" aria-label="${state.starred[f.id] ? 'เลิกติดดาว' : 'ติดดาว'}" aria-pressed="${!!state.starred[f.id]}">${icon('star')}</button></div>
+      <div class="truth"><span class="truth-label">✓ ข้อเท็จจริงที่ควรจำ</span><h4 class="fact-statement">${inline(f.truth)}</h4></div><p class="fact-explanation">${inline(f.why)}</p>${sourceLabel(f.source)}
+      <div class="fact-actions"><button class="btn small ${state.known[f.id] ? 'secondary' : 'ghost'}" type="button" data-action="know-fact" data-id="${f.id}" aria-pressed="${!!state.known[f.id]}">${icon('check')} ${state.known[f.id] ? 'จำได้แล้ว' : 'ทำเครื่องหมายว่าจำได้'}</button><small>#${String(number).padStart(2, '0')}</small></div></article>`;
   }
   function renderFacts() {
     const container = document.querySelector('#fact-results');
     if (!container) return;
-    const query = factsSearch.toLocaleLowerCase();
-    const visible = bank.facts.filter(f => (factsTopic === 'all' || f.topic === factsTopic) && (factsMode !== 'unknown' || !state.known[f.id]) && (factsMode !== 'known' || state.known[f.id]) && (factsMode !== 'starred' || state.starred[f.id]) && `${f.truth} ${f.why}`.toLocaleLowerCase().includes(query));
-    container.innerHTML = `<div class="results-count">${visible.length} บัตร <span>· จำได้แล้ว ${bank.facts.filter(f => state.known[f.id]).length}/${bank.facts.length}</span></div><div class="facts-grid">${visible.map((f, i) => `<article class="fact-card ${state.known[f.id] ? 'is-known' : ''}" id="fact-${f.id}"><div class="fact-head">${topicPill(f.topic)}${f.emphasis ? '<span class="pill amber">อาจารย์ย้ำ</span>' : ''}<button class="icon-button star-button ${state.starred[f.id] ? 'starred' : ''}" type="button" data-action="star-fact" data-id="${f.id}" aria-label="${state.starred[f.id] ? 'เลิกติดดาว' : 'ติดดาว'}" aria-pressed="${!!state.starred[f.id]}">${icon('star')}</button></div><div class="truth"><span class="truth-label">✓ ข้อเท็จจริงที่ควรจำ</span><h2 class="fact-statement">${inline(f.truth)}</h2></div><p class="fact-explanation">${inline(f.why)}</p>${sourceLabel(f.source)}<div class="fact-actions"><button class="btn small ${state.known[f.id] ? 'secondary' : 'ghost'}" type="button" data-action="know-fact" data-id="${f.id}" aria-pressed="${!!state.known[f.id]}">${icon('check')} ${state.known[f.id] ? 'จำได้แล้ว' : 'ทำเครื่องหมายว่าจำได้'}</button><small>#${String(i + 1).padStart(2, '0')}</small></div></article>`).join('')}</div>${!visible.length ? '<div class="empty-state"><h2>ไม่พบบัตรตามตัวกรองนี้</h2><p>ลองเปลี่ยนหัวข้อ คำค้น หรือสถานะบัตร</p></div>' : ''}`;
+    const query = factsSearch.trim().toLocaleLowerCase();
+    const visible = bank.facts.filter(f => (factsTopic === 'all' || f.topic === factsTopic) && (factsSubtopic === 'all' || f.subtopic === factsSubtopic) && (factsMode !== 'unknown' || !state.known[f.id]) && (factsMode !== 'known' || state.known[f.id]) && (factsMode !== 'starred' || state.starred[f.id]) && `${f.truth} ${f.why} ${topics[f.topic]?.name} ${factGroupById.get(f.subtopic)?.title}`.toLocaleLowerCase().includes(query));
+    let cardNumber = 0;
+    const sections = factTopicOrder.map(t => {
+      const topicFacts = visible.filter(f => f.topic === t);
+      if (!topicFacts.length) return '';
+      const groups = factGroups.filter(group => group.topic === t).map(group => {
+        const cards = topicFacts.filter(f => f.subtopic === group.id);
+        if (!cards.length) return '';
+        return `<section class="fact-subtopic-section"><div class="fact-subtopic-heading"><h3>${esc(group.title)}</h3><span>${cards.length} ข้อ</span></div><div class="facts-grid">${cards.map(f => factCard(f, group, ++cardNumber)).join('')}</div></section>`;
+      }).join('');
+      return `<section class="fact-topic-section"><div class="fact-topic-heading"><span class="topic-icon ${t}">${icon(topics[t].icon)}</span><div><h2>${esc(topics[t].name)}</h2><p>${topicFacts.length} ข้อ · ${new Set(topicFacts.map(f => f.subtopic)).size} หัวข้อย่อย</p></div></div>${groups}</section>`;
+    }).join('');
+    container.innerHTML = `<div class="results-count">${visible.length} ข้อ <span>· จำได้แล้ว ${bank.facts.filter(f => state.known[f.id]).length}/${bank.facts.length}</span></div>${sections}${!visible.length ? '<div class="empty-state"><h2>ไม่พบข้อเท็จจริงตามตัวกรองนี้</h2><p>ลองเปลี่ยนหมวด หัวข้อย่อย คำค้น หรือสถานะบัตร</p></div>' : ''}`;
   }
   function quizSetup() {
     const weak = [...state.wrong];
@@ -151,7 +176,7 @@
   function render() {
     route = parseRoute(); document.body.classList.remove('nav-open'); document.querySelector('.mobile-menu').setAttribute('aria-expanded', 'false');
     document.querySelector('#breadcrumb').innerHTML = `พื้นที่เรียนของฉัน <span>/</span> ${names[route.view]}`;
-    if (route.view === 'facts' && Object.hasOwn(topics, route.id)) factsTopic = route.id;
+    if (route.view === 'facts' && factTopicOrder.includes(route.id)) { factsTopic = route.id; factsSubtopic = 'all'; }
     sidebar(); activeLesson = null;
     main.innerHTML = route.view === 'reader' ? reader(route.id) : route.view === 'facts' ? factsPage() : route.view === 'quiz' ? quizView() : route.view === 'labs' ? labsPage() : dashboard();
     document.title = `${names[route.view]} · INT151 ห้องติวพร้อมสอบ`;
@@ -178,12 +203,12 @@
     if (action === 'theme') { state.theme = state.theme === 'dark' ? 'light' : 'dark'; setTheme(); persist(); }
     if (action === 'font') { state.largeText = !state.largeText; setTheme(); persist(); toast(state.largeText ? 'ใช้ตัวอักษรขนาดใหญ่' : 'ใช้ตัวอักษรขนาดปกติ'); }
     if (action === 'mark-read') { state.read[id] = !state.read[id]; persist(); sidebar(); const y = window.scrollY; main.innerHTML = reader(id); window.scrollTo({ top: y }); toast(state.read[id] ? 'บันทึกว่าอ่านบทนี้แล้ว' : 'นำเครื่องหมายอ่านแล้วออก'); }
-    if (action === 'fact-topic') { factsTopic = topic; main.innerHTML = factsPage(); renderFacts(); }
+    if (action === 'fact-topic') { factsTopic = topic; factsSubtopic = 'all'; main.innerHTML = factsPage(); renderFacts(); document.querySelector(`[data-action="fact-topic"][data-topic="${topic}"]`).focus({ preventScroll: true }); }
     if (action === 'know-fact' || action === 'star-fact') {
       const map = action === 'know-fact' ? state.known : state.starred; map[id] = !map[id]; persist();
       const y = window.scrollY; renderFacts(); window.scrollTo({ top: y });
     }
-    if (action === 'search-fact') { document.querySelector('#search-dialog').close(); const fact = bank.facts.find(f => f.id === id); factsTopic = 'all'; factsMode = 'all'; factsSearch = fact?.truth || ''; if (route.view === 'facts') { main.innerHTML = factsPage(); renderFacts(); } else location.hash = '#facts'; }
+    if (action === 'search-fact') { document.querySelector('#search-dialog').close(); const fact = bank.facts.find(f => f.id === id); factsTopic = 'all'; factsSubtopic = 'all'; factsMode = 'all'; factsSearch = fact?.truth || ''; if (route.view === 'facts') { main.innerHTML = factsPage(); renderFacts(); } else location.hash = '#facts'; }
     if (action === 'start-exam') startQuiz('exam', 'all', 30);
     if (action === 'start-wrong') startQuiz('wrong');
     if (action === 'translate' && quiz) { quiz.showThai = !quiz.showThai; renderQuiz(); }
@@ -200,6 +225,7 @@
   document.addEventListener('change', event => {
     if (event.target.matches('input[name="answer"]') && quiz) { const q = quiz.questions[quiz.index]; if (quiz.checked[q.id]) return; quiz.answers[q.id] = [...document.querySelectorAll('input[name="answer"]:checked')].map(input => Number(input.value)); document.querySelectorAll('.option').forEach(label => label.classList.toggle('selected', label.querySelector('input').checked)); }
     if (event.target.id === 'fact-mode') { factsMode = event.target.value; renderFacts(); }
+    if (event.target.id === 'fact-subtopic') { factsSubtopic = event.target.value; renderFacts(); }
   });
   document.addEventListener('input', event => { if (event.target.id === 'global-search') searchResults(event.target.value); if (event.target.id === 'fact-search') { factsSearch = event.target.value; renderFacts(); } });
   document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 'k') { event.preventDefault(); openSearch(); } if (event.key === 'Escape') { const dialog = document.querySelector('#search-dialog'); if (dialog.open) dialog.close(); document.body.classList.remove('nav-open'); document.querySelector('.mobile-menu').setAttribute('aria-expanded', 'false'); } });

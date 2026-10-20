@@ -7,7 +7,34 @@
   const delegation = 'คาบ Event delegation · G1 29 ก.ย. / G2 30 ก.ย. 2569';
   const cookies = 'คาบ Cookie · G1 6 ต.ค. / G2 7 ต.ค. 2569';
   const webStorage = 'คาบ Web Storage · G1 15 ต.ค. / G2 14 ต.ค. 2569';
-  const F = (id, topic, truth, why, source, emphasis = false) => ({ id, topic, truth, why, source, emphasis });
+  const groups = [
+    ['dom-select', 'dom', 'เลือก Element และจัดการ Collection', ['f26', 'f27', 'f29']],
+    ['dom-values', 'dom', 'อ่านค่าฟอร์มและแก้ข้อความ', ['f37', 'f38', 'class-select-value', 'class-text-overwrite']],
+    ['dom-attributes', 'dom', 'Attribute, dataset และ CSS class', ['f39', 'f40']],
+    ['dom-tree', 'dom', 'ค้นหาและลบในโครงสร้าง DOM', ['f41', 'f42', 'class-matches']],
+    ['event-listeners', 'events', 'ผูกและถอด Event listener', ['class-dom-event', 'f19', 'f18', 'class-reuse-handler', 'f22', 'f21']],
+    ['event-object', 'events', 'Event object: target, currentTarget และ phase', ['class-event-object', 'f12', 'class-type-phase']],
+    ['event-flow', 'events', 'Event flow: Capture, Bubble และลำดับทำงาน', ['f11', 'f10', 'class-capture-default', 'class-listener-order']],
+    ['event-cancel', 'events', 'preventDefault และ stopPropagation', ['f14', 'f15', 'f16', 'class-dropdown']],
+    ['event-delegation', 'events', 'Event delegation: รับ Event ผ่าน parent', ['f24']],
+    ['event-types', 'events', 'ชนิด Event: โหลดหน้า, Input, Mouse และ Keyboard', ['f25', 'class-window-load', 'class-focus-blur', 'f7', 'f8', 'class-mouse-order', 'class-key']],
+    ['event-forms', 'events', 'Form: submit และตรวจข้อมูล', ['class-form-submit', 'class-trim', 'class-signup']],
+    ['storage-values', 'storage', 'Web Storage: อ่าน, เขียน และลบข้อมูล', ['f43', 'f44', 'f46', 'f52']],
+    ['storage-json', 'storage', 'JSON: เก็บ Array และ Object', ['f45', 'f53']],
+    ['storage-lifetime', 'storage', 'localStorage กับ sessionStorage: อายุและขอบเขต', ['f47', 'f48', 'class-local-persist', 'f50']],
+    ['storage-choice', 'storage', 'เลือก Storage ให้ตรงงานและความปลอดภัย', ['f51', 'class-storage-choice', 'class-cookie-size', 'class-sensitive']],
+    ['cookie-http', 'storage', 'Cookie กับ HTTP: Request และ Response', ['f55', 'class-cookie-headers']],
+    ['cookie-scope', 'storage', 'Cookie: Domain และ Path', ['f56', 'f58', 'f57']],
+    ['cookie-security', 'storage', 'Cookie: Secure, HttpOnly และ Tracking', ['f59', 'f60', 'class-tracking']],
+    ['cookie-management', 'storage', 'Cookie: อ่าน, ตั้งค่า, ลบ และวันหมดอายุ', ['f61', 'f63', 'f64', 'f65', 'f66', 'class-cookie-util']],
+    ['js-types', 'javascript', 'ชนิดข้อมูล, แปลงค่า และเงื่อนไข', ['f71', 'f72', 'class-counter']],
+    ['js-arrays', 'javascript', 'Array, Object และการวนคำนวณ', ['f76', 'class-cart-total']],
+    ['js-dialogs', 'javascript', 'Browser dialogs: prompt, confirm และ alert', ['f85', 'class-dialogs']],
+    ['js-modules', 'javascript', 'Module: import และ export', ['f87']],
+    ['js-date', 'javascript', 'Date และเวลาแบบ timestamp', ['class-date-epoch']]
+  ].map(([id, topic, title, factIds]) => ({ id, topic, title, factIds }));
+  const groupForFact = new Map(groups.flatMap(group => group.factIds.map(id => [id, group.id])));
+  const F = (id, topic, truth, why, source, emphasis = false) => ({ id, topic, subtopic: groupForFact.get(id), truth, why, source, emphasis });
   const facts = [
     F('class-dom-event', 'events', 'DOM และ Event ต้องใช้ร่วมกัน: เลือก element ให้ถูกก่อนผูก listener', 'อาจารย์ย้ำว่าห้ามทิ้ง DOM เพราะ Event ต้องไปผูกกับ object บนหน้าเว็บ เช่น เลือกปุ่มก่อนรับ click แล้วเลือก p เพื่อแสดงผล', early, true),
     F('class-event-object', 'events', 'Browser ส่ง Event object เข้ามาให้ฟังก์ชัน listener ผ่าน parameter', 'อาจารย์เรียก Event object ว่า “พระเอก” ของบท ให้เข้าใจ property/method ในกรอบแดงของสไลด์ ไม่ใช่จำชื่ออย่างเดียว ชื่อ parameter จะเป็น event หรือชื่ออื่นก็ได้', eventObjects, true),
@@ -91,5 +118,6 @@
     F('class-counter', 'javascript', 'visit counter ต้องอ่านค่า → ถ้า null เริ่ม 1 → ไม่เช่นนั้นเพิ่ม → บันทึกและแสดงผล', 'อาจารย์ใช้โจทย์นี้เทียบ local/session และให้สังเกต ++value กับ value++ ว่าเพิ่มก่อนหรือส่งค่าเก่าก่อน ใช้ Number(value) + 1 ทำให้ขั้นตอนชัดได้', webStorage)
   ];
   window.STUDY_BANK.facts = facts;
+  window.STUDY_BANK.factGroups = groups;
   window.STUDY_BANK.factsBasis = 'classroom';
 })();
