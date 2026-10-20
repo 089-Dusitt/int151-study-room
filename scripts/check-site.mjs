@@ -2,11 +2,13 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 const context = vm.createContext({ window: {} });
-for (const file of ['lessons.js', 'bank.js', 'quiz-core.js']) vm.runInContext(await readFile(new URL('../dist/' + file, import.meta.url), 'utf8'), context, { filename: file });
+for (const file of ['lessons.js', 'bank.js', 'classroom-facts.js', 'quiz-core.js']) vm.runInContext(await readFile(new URL('../dist/' + file, import.meta.url), 'utf8'), context, { filename: file });
 const { STUDY_LESSONS: lessons, STUDY_BANK: bank, StudyCore: core } = context.window;
 assert(lessons.length >= 20, 'Complete lessons required');
 assert(bank.facts.length >= 55, 'Fact coverage required');
 assert(bank.questions.length >= 30, 'Full exam pool required');
+assert.equal(bank.factsBasis, 'classroom');
+assert(bank.facts.every(f => f.source?.startsWith('คาบ') && f.truth && f.why), 'Each fact must cite the classroom session');
 assert.equal(bank.labs.length, 6);
 for (const [name, list] of Object.entries({ lessons, facts: bank.facts, questions: bank.questions, labs: bank.labs })) {
   assert.equal(new Set(list.map(item => item.id)).size, list.length, `${name} IDs must be unique`);
