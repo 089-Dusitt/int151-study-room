@@ -718,6 +718,9 @@
   .truth-label { display: block; font-size: .65rem; font-weight: 550; margin-block-end: 4px; }
   .trap, .truth { font-size: .94rem; }
   .fact-explanation { font-size: .88rem; }
+  .fact-statement { margin: 0; font-size: 1.05rem; line-height: 1.9; font-weight: 600; overflow-wrap: anywhere; }
+  .fact-card > .fact-explanation { margin-block: 16px 12px; }
+  .fact-card > .source-label { margin-block-end: 16px; }
   .fact-card.is-known { border-color: #c9d9c9; }
   .fact-actions { justify-content: space-between; padding-block-start: 13px; }
   .fact-actions > small { color: var(--muted); font-size: .65rem; }
